@@ -18,8 +18,7 @@
 #include "header.h"
 
 // USEFUL
-#include "/Users/alexandregaillard/Documents/Compiler/lib/libperso/useful.cpp"
-#include "/Users/alexandregaillard/Documents/Compiler/lib/libperso/tauchen.cpp"
+#include "useful.cpp"
 
 // CPP FILES //
 #include "cohfun.cpp"
@@ -40,8 +39,13 @@ int main(int argc, char* argv[])
 /** INITIALIZATION **/
 /********************/
 
-int k, y, h, s, c, maxS;
-double coh_temp;
+int k, y, h, s, c, maxS, iter_rent, iter_price;
+double coh_temp, HO, LL, RT;
+
+
+timeval t1, t2, t3, t4, t5, t6, t7, t8;
+double elapsedTime;
+
 
 // VALUE AND POLICY FUNCTIONS //
 double *VF, *Know, *eVF, *deVF, *MUtilde, *VFtilde;
@@ -74,8 +78,8 @@ double epsrent = 0.0001;
 double Hsupply = 1.2;
 
 
-pricemax = 3.06;
-pricemin = 3.04;
+pricemax = 3.2;
+pricemin = 2.7;
 price = (pricemax + pricemin)/2;
 
 
@@ -167,61 +171,46 @@ for(k=0;k<length_k;k++){ // next k
 /** START EQUILIBRIUM FIXED POINT **/
 printf("STARTING EQUILIBRIUM FIXED POINT...\n");
 
-timeval t1, t2, t3, t4;
-double elapsedTime;
 
-
-// start timer
+// TIMER HOUSING MARKET //
 gettimeofday(&t1, NULL);
 
 
 
-
-pricemax = 3.06;
-pricemin = 3.04;
-price = (pricemax + pricemin)/2;
-//critereprice = 1.0;
-aggHout= 1.0;
 // STARTING EQUILIBRIUM ON HOUSING PRICES //
 // rental and housing market are too much dependent --> nested loop //
-while(fabs(aggHout) > epsprice){
+
+aggHout= 1.0;
+iter_price = 0;
+while(fabs(pricemax - pricemin) > epsilonprice && iter_price < itermax){
     
-    // check time //
+    
+    // TIMER RENTAL MARKET //
     gettimeofday(&t3, NULL);
     
     
     // STARTING EQUILIBRIUM ON RENTAL MARKET //
-    rentmax = 0.2425;
-    rentmin = 0.2375;
-    rent = (rentmax + rentmin)/2;
+    rentmax = 0.3;
+    rentmin = 0.15;
     
     aggRout = 1.0;
-    while(fabs(aggRout) > epsrent){
+    iter_rent = 0;
+    while(fabs(rentmax - rentmin) > epsilonprice && iter_rent < itermax){
         
         rent = (rentmax + rentmin)/2;
         
         // POLICY ITERATION (using EGM) //
+        gettimeofday(&t5, NULL);
         POLICY(VF,eVF,deVF,COHendo,COHendo_min,Know,Hnow,Snow);
+        gettimeofday(&t6, NULL);
 
         // SIMULATION (using histogram method) //
-        SIMULATION(Know,Hnow,Snow,dist,&aggRout,&aggHout,&currentH);
-
-
-//        // CHECK EQUILIBRIUM CONDITIONS FOR RENTAL MARKET //
-//        if(aggRout > 0.0001 || aggRout < 0.0001){ // then update rent
-//            newrent = rent + rent*(aggRout);
-//        }
-//
-//        // New prices //
-//        newrent = relaxR*newrent + (1-relaxR)*rent;
-//        newprice = relaxP*newprice + (1-relaxP)*price;
-        
-        
-//        // criterion //
-//        critereprice = (abs(newrent - rent)/rent);
-//        critereprice = max(critereprice,(abs(newprice - price)/price));
-        
-        printf("EQUILIBRIUM RENTAL MARKET :: aggRout=%f, (aggHout-Hsupply)=%f,  rent=%20.15f price=%20.15f \n",  aggRout, aggHout - Hsupply,rent , price);
+        gettimeofday(&t7, NULL);
+        SIMULATION(Know,Hnow,Snow,dist,&aggRout,&aggHout,&HO,&LL,&RT);
+        gettimeofday(&t8, NULL);
+  
+    
+        printf("EQUILIBRIUM RENTAL MARKET :: aggRout=%f, (aggHout-Hsupply)=%f, rent=%20.15f, price=%20.15f || time: POL = %fs, SIMUL = %fs \n",  aggRout, aggHout - Hsupply,rent , price, timer_alex(t5,t6), timer_alex(t7,t8));
         
         
         // update price //
@@ -231,6 +220,7 @@ while(fabs(aggHout) > epsprice){
             rentmax = rent;
         }
         
+        iter_rent++;
         
     } // end looking for rental market clearing condition
     
@@ -238,25 +228,8 @@ while(fabs(aggHout) > epsprice){
     
     gettimeofday(&t4, NULL);
 
-    elapsedTime = (t4.tv_sec - t3.tv_sec) * 1000.0;
-    elapsedTime += (t4.tv_usec - t3.tv_usec) / 1000.0;
 
-    
-    // Housing supply //
-    //Hsupply = currentH*(nper);
-
-//    // CHECK EQUILIBRIUM CONDITIONS FOR HOUSING MARKET //
-//    if(aggHout > Hsupply || aggHout < Hsupply){ // then update rent
-//        newprice = price + price*(aggHout - Hsupply);
-//    }
-//
-//    newprice = relaxP*newprice + (1-relaxP)*price;
-//
-//    // criterion //
-//    critereprice = (abs(newrent - rent)/rent);
-//    critereprice = max(critereprice,(abs(newprice - price)/price));
-
-    printf("EQUILIBRIUM HOUSING MARKET ::  aggRout=%f, (aggHout-Hsupply)=%f, rent=%f, price=%f, time=%fs\n",  aggRout, aggHout - Hsupply,rent, price, elapsedTime/1000);
+    printf("EQUILIBRIUM HOUSING MARKET ::  aggRout=%f, (aggHout-Hsupply)=%f, rent=%f, price=%f || time: EQUILIBRIUM = %fs, HO = %f, RT = %f, LL = %f \n",  aggRout, aggHout - Hsupply,rent, price, timer_alex(t3,t4), HO, RT, LL);
 
     
     if(aggHout > Hsupply){ // demand is too high -> increase price
@@ -265,8 +238,10 @@ while(fabs(aggHout) > epsprice){
         pricemax = price;
     }
     
+    // NEW PRICE //
     price = (pricemax + pricemin)/2;
-
+    
+    
 
     /** REDEFINE THE GRID **/
     
@@ -372,16 +347,15 @@ while(fabs(aggHout) > epsprice){
 
     UEC(deVF, eVF, COHendo);
     
+    
+    iter_price++;
+    
 } // end while equilibrium.
 
 
-
-
 gettimeofday(&t2, NULL);
-elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;
-elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
 
-printf("===================Program ended in %f seconds\n",elapsedTime/1000);
+printf("===================Program ended in %f seconds\n",timer_alex(t1,t2));
     
 return 0;
 }

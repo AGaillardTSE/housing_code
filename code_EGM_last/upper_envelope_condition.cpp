@@ -23,7 +23,7 @@ for(y = 0; y<length_y; y++){
 
             for(k=0;k<(length_k);k++){ // previous k
 
-                if(k > 0){
+                if(k > 0 && k < (length_k-1)){
 
                 if(COHendo[inxKHYS(k,h,y,s)] < COHendo[inxKHYS(k-1,h,y,s)] && k >= klim){ // then means that there is a discontinuity here.
 
@@ -34,12 +34,20 @@ for(y = 0; y<length_y; y++){
 
                     // Bound the set J2, where there are several value of COH around the same place.
                     while((COHendo[inxKHYS(kk,h,y,s)] > COHendo[inxKHYS((kk+1),h,y,s)]) && (kk < length_k)){
-                        if(kk == (length_k-2)){Kcase = 2;printf("stop problem in upper envelope condition :: %f %f %f %f %d %d %d", deVF[inxKHY(k,h,y)], deVF[inxKHY(k-1,h,y)], COHendo[inxKHYS(k,h,y,s)], COHendo[inxKHYS(k-1,h,y,s)], kk, k, kk+1);getchar();}
+                        if(kk >= (length_k-2)){Kcase = 2;
+                        //printf("stop problem in upper envelope condition :: %f %f %f %f %d %d %d", deVF[inxKHY(k,h,y)], deVF[inxKHY(k-1,h,y)], COHendo[inxKHYS(k,h,y,s)], COHendo[inxKHYS(k-1,h,y,s)], kk, k, kk+1);getchar();
+                        
+                        }
                         kk++;
                     }
 
-                    // NOW TEST THE VALUE of COH AT (k-1) EVALUATED AT THE value after the kink until finding the optimal k before the kink //
-                    slope = (eVF[inxKHY((kk+1),h,y)] - eVF[inxKHY((kk),h,y)])/(K[inxKH((kk+1),h)] - K[inxKH((kk),h)]);
+                    // AT THIS STAGE: we get the point at which we recover something increasing (kk), and we have the point at which it falls (k-1)
+                    
+                    
+                    if(Kcase < 2){
+                    
+                    // NOW TEST THE VALUE of COH AT (k-1) EVALUATED AT THE value after the kink where coh is increasing //
+                    slope = (eVF[inxKHY((kk+1),h,y)] - eVF[inxKHY((kk),h,y)])/(COHendo[inxKHYS((kk+1),h,y,s)] - COHendo[inxKHYS((kk),h,y,s)]);
                     extrapole = slope2*(COHendo[inxKHYS((k-1),h,y,s)] - COHendo[inxKHYS(kk,h,y,s)]) + eVF[inxKHY((kk),h,y)];
                     remove = 0;
                     kkk = (k-1);
@@ -49,11 +57,11 @@ for(y = 0; y<length_y; y++){
                     // 2. if extrapole(k-1) < eVF[k-1]:: then remove COH(kk), and try the next point kk+1. Compute the new extrapolation.
                     while(remove == 0){
 
-                        if(extrapole > eVF[inxKHY(kkk,h,y)] && (COHendo[inxKHYS(kkk,h,y,s)] > COHendo[inxKHYS(kk,h,y,s)])){
+                        if(extrapole >= eVF[inxKHY(kkk,h,y)] && (COHendo[inxKHYS(kkk,h,y,s)] > COHendo[inxKHYS(kk,h,y,s)])){
                             COHendo[inxKHYS(kkk,h,y,s)] = -10000; // we don't care about this saving point, since we have a better point.
                             remove = 0;
                             kkk = kkk-1;
-                            slope = (eVF[inxKHY((kk+1),h,y)] - eVF[inxKHY((kk),h,y)])/(K[inxKH((kk+1),h)] - K[inxKH((kk),h)]);
+                            slope = (eVF[inxKHY((kk+1),h,y)] - eVF[inxKHY((kk),h,y)])/(COHendo[inxKHYS((kk+1),h,y,s)] - COHendo[inxKHYS((kk),h,y,s)]);
                             extrapole = slope*(COHendo[inxKHYS(kkk,h,y,s)] - COHendo[inxKHYS(kk,h,y,s)]) + eVF[inxKHY((kk),h,y)]; // may be before kk (in that case controlled).
                             if(kkk < 0){remove = 1;}
                         }
@@ -62,9 +70,15 @@ for(y = 0; y<length_y; y++){
                             COHendo[inxKHYS(kk,h,y,s)] = -10000;
                             kk = kk+1;
                             remove = 0;
-                            slope = (eVF[inxKHY((kk+1),h,y)] - eVF[inxKHY((kk),h,y)])/(K[inxKH((kk+1),h)] - K[inxKH((kk),h)]);
+                            if(kk == length_k-1){
+                                remove = 1;
+                            }else{
+                            slope = (eVF[inxKHY((kk+1),h,y)] - eVF[inxKHY((kk),h,y)])/(COHendo[inxKHYS((kk+1),h,y,s)] - COHendo[inxKHYS((kk),h,y,s)]);
                             extrapole = slope*(COHendo[inxKHYS(kkk,h,y,s)] - COHendo[inxKHYS(kk,h,y,s)]) + eVF[inxKHY((kk),h,y)];
-                            if(kk > (length_k - 1)){printf("kk too big");getchar();}
+                            
+                            //printf("kk too big, extrapolate = %f, VF = %f, VF-10 = %f, VF+1= %f , slope = %f, kk = %d, kkk = %d, COHendoNew = %f, COHendoNew = %f, COHendoNew = %f, COHendoNew = %f, COHendocompare = %f", extrapole, eVF[inxKHY((kk),h,y)], eVF[inxKHY((kk-10),h,y)], eVF[inxKHY((kk+1),h,y)], slope, kk, kkk, COHendo[inxKHYS(kk,h,y,s)],COHendo[inxKHYS(kk-1,h,y,s)],COHendo[inxKHYS(kk-2,h,y,s)],COHendo[inxKHYS(kk-3,h,y,s)], COHendo[inxKHYS(kkk,h,y,s)]);
+                                
+                            }
                         }
 
                         if((COHendo[inxKHYS(kkk,h,y,s)] < COHendo[inxKHYS(kk,h,y,s)])){
@@ -76,10 +90,12 @@ for(y = 0; y<length_y; y++){
 
                     // THEN SHOULD HAVE A FINE GRID WITH ONLY ONE SOLUTION FOR COH VALUE.
                     klim = kk;
+                    
+                    } // end Kcase == 2
 
                     if(k >= 2){
-                        if(COHendo[inxKHYS((k-1),h,y,s)] < COHendo[inxKHYS((k-2),h,y,s)] && COHendo[inxKHYS((k-1),h,y,s)] > -1000){printf("BUG COHk < COHk-1: %f %f", COHendo[inxKHYS(k-1,h,y,s)], COHendo[inxKHYS((k-2),h,y,s)]);getchar();
-                        }
+//                        if(COHendo[inxKHYS((k-1),h,y,s)] < COHendo[inxKHYS((k-2),h,y,s)] && COHendo[inxKHYS((k-1),h,y,s)] > -1000){printf("BUG COHk < COHk-1: %f %f", COHendo[inxKHYS(k-1,h,y,s)], COHendo[inxKHYS((k-2),h,y,s)]);getchar();
+//                        }
                     }
                     
                     //printf("%f %f %f %f %f %f %f %f %f %f", COHendo[inxKHYS(k+4,h,y,s)], COHendo[inxKHYS(k+3,h,y,s)], COHendo[inxKHYS(k+2,h,y,s)], COHendo[inxKHYS(k+1,h,y,s)], COHendo[inxKHYS(k,h,y,s)], COHendo[inxKHYS(k-1,h,y,s)], COHendo[inxKHYS(k-2,h,y,s)], COHendo[inxKHYS(k-3,h,y,s)], COHendo[inxKHYS(k-4,h,y,s)], COHendo[inxKHYS(k-5,h,y,s)]);getchar();
@@ -95,3 +111,4 @@ for(y = 0; y<length_y; y++){
 
 
 } // end UEC
+

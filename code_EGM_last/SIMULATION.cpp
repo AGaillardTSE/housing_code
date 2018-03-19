@@ -42,7 +42,7 @@ void getresid(double x, double *residout, int *ixgrid, int h)
 
 
 /** SIMULATION **/
-void SIMULATION(double *save, int *Hopti, int *Sopti, double *dist, double *aggR, double *aggH, double *currentstock){
+void SIMULATION(double *save, int *Hopti, int *Sopti, double *dist, double *aggR, double *aggH, double *HO, double *LL, double *RT){
    
    
 int k, y, h, i, *isave, ynext;
@@ -133,7 +133,7 @@ for(k = 0; k < length_k; k++){
 
 double aggK, fracL, fracH, fracR;
     
-aggK = 0.0; fracL = 0.0; fracH = 0.0; *aggH =0.0; *aggR = 0.0; *currentstock = 0.0; fracR = 0.0;
+aggK = 0.0; fracL = 0.0; fracH = 0.0; *aggH =0.0; *aggR = 0.0; fracR = 0.0;
 
 for(k = 0; k < length_k; k++){
     for(h = 0; h < length_h; h++) {
@@ -146,8 +146,6 @@ for(k = 0; k < length_k; k++){
             *aggR += (S[Sopti[inxKHY(k,h,y)]] - H[Hopti[inxKHY(k,h,y)]])*dist[inxKHY(k,h,y)];
             
             *aggH += (H[Hopti[inxKHY(k,h,y)]])*dist[inxKHY(k,h,y)];
-            
-            *currentstock += (H[h])*dist[inxKHY(k,h,y)];
             
             // HOUSING TENURE //
             if(H[Hopti[inxKHY(k,h,y)]] == 0){
@@ -163,6 +161,11 @@ for(k = 0; k < length_k; k++){
 } // end igrid
 
 *aggH = *aggH - housesold;
+
+*HO = fracH;
+*RT = fracR;
+*LL = fracL;
+
 
 //printf("Homeowner = %f, Renter = %f, Landlord = %f, aggK = %f \n", fracH, fracR, fracL, aggK);
     

@@ -48,11 +48,11 @@ double smoothpar = 0.5;
 
 
 // LENGTH OF THE GRIDS //
-#define length_k 500 // must be an even number !!
+#define length_k 200
 #define length_y 7
 #define length_h 7
 #define length_s 17
-#define length_c 500
+#define length_c 1000
 
 
 // DIMENSION FOR POINTERS //
@@ -152,56 +152,20 @@ double phipar = 0.056;          // fixed cost for landlord
 
 
 
-
-
-// Linspace functions //
-#define linspace2(xmin,xmax,n,i) ((i)>=(100))?((i-100)*(((xmax)-(Gridmiddle))/(n/2))+(Gridmiddle)):(((i)*(((Gridmiddle)-(xmin))/((n/2)))+(xmin)))
-#define invlinspace2(xmin,xmax,n,x) ((x)>=(Gridmiddle))?(((((x)-(Gridmiddle))/((xmax)-(Gridmiddle)))*((n/2)))+100):(((((x)-(xmin))/((Gridmiddle)-(xmin)))*((n/2))))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*************************/
 //  NUMERICAL PARAMETERS //
 /*************************/
 
 // distibution criterion
-#define epsdist 0.0000000001
+#define epsdist 0.000000001
 
 //value function cnvg criterion
 #define epsilonValue 0.000001
-const int maxiterVF = 1000;
+const int maxiterVF = 400;
 
 //aggregate capital cnvg criterion
-#define epsilonprice 0.0001
+#define epsilonprice 0.00001
 #define itermax 20
-
-//aggregate capital relaxation
-#define relaxK 0.2
-
-//aggregate capital relaxation
-#define relaxL 0.2
-
-//aggregate tax relaxation
-#define relaxTax 0.2
-
-// TOLERANCE MNBRACK
-const double GOLD=1.618034,GLIMIT=100.0,TINY=1.0e-20;
-
-// TOLERANCE MNGOLDEN
-const double TOL= 1.0e-5;
-const double R=0.61803399,C=1.0-R;
 
 
 // FILE OUT //
