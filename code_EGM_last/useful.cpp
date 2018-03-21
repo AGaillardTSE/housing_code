@@ -13,8 +13,8 @@
 #define inter2d(x1,x2,y11,y21,y12,y22) ((1.0-(x2))*((1.0-(x1))*(y11)+(x1)*(y21))+(x2)*((1.0-(x1))*(y12)+(x1)*(y22)))
 
 // TO DEFINE GRID SPACING //
-#define linspace(x0,xmax,n,i) ((i)*(((xmax)-(x0))/(n))+(x0)) // transform a grid into a value
-#define invlinspace(x0,xmax,n,x) ((((x)-(x0))/((xmax)-(x0)))*(n)) // transform a value into a grid
+#define linspace(x0,xmax,n,i) ((i)*(((xmax)-(x0))/(n-1))+(x0)) // transform a grid into a value
+#define invlinspace(x0,xmax,n,x) ((((x)-(x0))/((xmax)-(x0)))*(n-1)) // transform a value into a grid
 #define expspace(i,xmin,xmax,echelle,n) ( echelle*(exp((log((xmax/echelle)-((xmin/echelle)-1.0))/(n-1))*(i))+((xmin/echelle)-1.0)) ) // transform a grid into a value
 #define invexpspace(x,xmin,xmax,echelle,n) ( log((x)/echelle - ((xmin/echelle)-1.0))/(log((xmax/echelle)-((xmin/echelle)-1.0))/(n-1)) ) // transform a value into a grid
 
